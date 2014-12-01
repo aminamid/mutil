@@ -1,5 +1,6 @@
 # Feature
 
+Below is the skelton for parsing and validating commandline arguments, and logging.
 
 ```python
 # -*- coding: utf-8 -*-
@@ -14,49 +15,21 @@ def parsed_args():
 
     myhelp = """
     Usage:
-      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)]  get (<query> | -f FILE)
-      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)]  put (<influxdb_point> | -f FILE)
-      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)]  getdb
-      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)]  getcq
-      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)]  dropcq <cqid>
-      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)]  dropcq_all
+      {progname} [options] [(--logfile | --logboth)] [(--debug | --nolog)] ARGS...
 
     Options:
-      -h HOST, --host=HOST  hostname [default: localhost]
-      -p PORT, --port=PORT  port number [default: 8086]
-      -u USER, --user=USER  user for influxdb [default: root]
-      -w PSWD, --pswd=PSWD  password for influxdb [default: root]
-      -d DB, --dbname=DB    dbname [default: testdb]
-      -t TIMEOUT, --timeout=TIMEOUT    dbname [default: 60]
-      -f FILE, --file=FILE  filename
-      --force               force create if db is not exists [default: False]
       --logfile             out put log to file  [default: False]
       --logboth             out put log to file and console  [default: False]
       --logdir DIR          out put log to file  [default: ./dir]
-      --loglevel <level>    loglevel [default: 30]
+      --loglevel <level>    loglevel [default: 20]
       --debug               set loglevel to logging.DEBUG [default: False]
       --nolog               set loglevel to 0 [default: False]
       --help                show this message
 
     """
     myschema = Schema({
-      'get':bool,
-      'put':bool,
-      'getdb':bool,
-      'getcq':bool,
-      'dropcq':bool,
-      'dropcq_all':bool,
-      '<query>': Or(None, str),
-      '<influxdb_point>': Or(None, str),
-      '<cqid>': Or(None, Use(int)),
-      '--host': basestring,
-      '--port': Use(int),
-      '--user': basestring,
-      '--pswd': basestring,
-      '--dbname': basestring,
-      '--timeout': Use(int),
-      '--file': Or(None, Use(open, error="Files should be readable")),
-      '--force': bool,
+      'ARGS': list,
+
       '--logfile': bool,
       '--logboth': bool,
       '--logdir': basestring,
@@ -69,7 +42,9 @@ def parsed_args():
     return mopts.parse(myhelp=myhelp, myschema=myschema, filepath=__file__)
 
 def main(opts, handle_mgr  ):
-    module_logger.info('args=[{0}],opts=[{1}]'.format(args,opts))
+    module_logger.info('opts=[{0}]'.format(opts))
+
+    print(opts)
 
 
 if __name__ == '__main__':
@@ -86,6 +61,8 @@ if __name__ == '__main__':
         enable_stream = not opts.logfile ,
         enable_file = opts.logboth or opts.logfile,
         level = opts.loglevel )
+
+    main(opts, handle_mgr)
 ```
 
 
