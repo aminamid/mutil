@@ -1,0 +1,6 @@
+[submodule "contrib/schema"]
+	path = contrib/schema
+	url = git://github.com/keleshev/schema.git
+[submodule "contrib/docopt"]
+	path = contrib/docopt
+	url = git://github.com/docopt/docopt.git
