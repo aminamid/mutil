@@ -10,7 +10,7 @@ def parse(myhelp, myschema, filepath):
 
     parsed_opts = docopt( myhelp.format(progname = path.basename(filepath), basename = path.splitext(path.basename(filepath))[0]), version=None )
     
-    if parsed_opts['--loglevel']:
+    if parsed_opts['--debug']:
         print 'docopt parsed as below:\n{0}'.format(parsed_opts)
 
     checked_opts = myschema.validate(parsed_opts)
