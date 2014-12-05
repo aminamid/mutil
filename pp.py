@@ -33,25 +33,34 @@ def pretty_convert(obj):
         return dict((u'{1}{2}:{0}'.format(color.ENDC, color.YELLOW,k), pretty_convert(v)) for k, v in obj.items())
     elif isinstance(obj, (list, tuple)):
         return map(pretty_convert, obj)
-    return obj
+    elif isinstance(obj, type(None)):
+        return 'None'
+    elif hasattr(obj, '__dict__') :
+        return dict((u'{1}{2}:{0}'.format(color.ENDC, color.YELLOW,k), pretty_convert(v)) for k, v in obj.__dict__.items())
+    else:
+        return '<pp: cannot decode>'
 
-def walk_obj(buf, obj, indent_num=2, depth=0, eol='', wrap_len=60, wrap_total=100, lf='\n', maxdepth=None):
-    if not maxdepth and depth > maxdepth:
-        return
+def walk_obj(buf, obj, indent_num=2, depth=0, eol='', wrap_len=60, wrap_total=100, lf='\n'):
     indent = ' '*indent_num*depth
     buf.write(u'{0}'.format(eol if not eol else eol+indent) )
     if isinstance(obj, (basestring, int, float, complex)):
         buf.write(u'{0}'.format(obj).replace(lf, '{0}{1} '.format(lf, indent)) )
     elif isinstance(obj, ( dict )):
+        if not obj:
+            buf.write('{}')
+            return
         eol, eol_org = lf, eol
         buf.write('{ ')
-        for key in obj.keys():
+        for key in sorted(obj.keys()):
             buf.write(u'{0}{1}{2}{3} '.format(eol, indent, ' '*indent_num, key))
             walk_obj(buf=buf, obj=obj[key], indent_num=indent_num, depth=depth+1, eol='', wrap_len=wrap_len, lf=lf )
             buf.write(',')
         buf.write('{0}}}'.format(eol if not eol else eol+indent) )
         eol=eol_org
     elif isinstance(obj, (list, tuple)):
+        if not obj:
+            buf.write('[]')
+            return
         eol_org, indent_org = eol, indent
         for item in obj:
             if isinstance(item, (list, dict)):
@@ -61,7 +70,7 @@ def walk_obj(buf, obj, indent_num=2, depth=0, eol='', wrap_len=60, wrap_total=10
                 eol = ''
                 indent = ''
                 continue
-        if max(map(len,obj)) > wrap_len or sum(map(len,obj)) > wrap_total:
+        if max(map(len,obj if obj else " " )) > wrap_len or sum(map(len,obj)) > wrap_total:
             eol = lf
         buf.write('[ ')
         for item in obj:
@@ -69,14 +78,19 @@ def walk_obj(buf, obj, indent_num=2, depth=0, eol='', wrap_len=60, wrap_total=10
             buf.write(', ')
         buf.write('{0}]'.format(eol if not eol else eol+indent_org) )
         eol, indent = eol_org, indent_org
-    if depth == 0:
-        buf.write(lf)
 
-def pretty_print(obj, indent=2, b=None):
+def pprint(obj, indent=2, b=None, lf='\n'):
     if not b:
         import sys, codecs
         b = codecs.getwriter('utf_8')(sys.stdout)
     walk_obj(b, pretty_convert(obj), indent_num=indent)
+    b.write(lf)
+
+def pprintf(obj, indent=2):
+    from StringIO import StringIO
+    buf=StringIO()
+    walk_obj(buf, pretty_convert(obj), indent_num=indent)
+    return buf.getvalue()
 
 
 if __name__ == '__main__':
@@ -105,4 +119,5 @@ if __name__ == '__main__':
   if not parsed_data:
       sys.exit(2)
 
-  pretty_print(parsed_data, indent)
+  pprint(parsed_data, indent)
+  b = codecs.getwriter('utf_8')(sys.stdout)
