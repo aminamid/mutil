@@ -10,7 +10,6 @@ from email.mime.text import MIMEText
 
 
 import mimetypes
-import yaml
 from random import choice
 
 class BlackBox(object):
@@ -35,10 +34,8 @@ MTXT = 'base_text'
 ATCH = 'attachment'
 
 class GenMsg(object):
-    def __init__(self, configfile):
-        fp=open(configfile,'r')
-        self.cfg = yaml.load(fp.read())
-        fp.close()
+    def __init__(self, cfg):
+        self.cfg = cfg
 
         self.atch_raw = {}
         self.atch_index = []
