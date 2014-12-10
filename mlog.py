@@ -3,9 +3,6 @@
 BASE_CONFIG = """---
 version: 1 
 disable_existing_loggers: False
-loggers:
-  foo.bar.baz:
-    handlers: [console, file]
 handlers:
   console:
     class : logging.StreamHandler
@@ -26,6 +23,7 @@ formatters:
     datefmt: '%Y%m%d %H%M%S'
 """
 
+
 from logging import INFO
 
 def gencfg(
@@ -43,17 +41,24 @@ def gencfg(
     import os
 
     dirpath=os.path.abspath(logdir)
-    if enable_file and not os.path.isdir(dirpath):  os.makedirs(dirpath)
 
-    tmp_handlers = []
-    if enable_stream:  tmp_handlers.append('console')
-    if enable_file:    tmp_handlers.append('file')
-
-    loggers_dict = dict([ ( x, {'handlers': tmp_handlers } ) for x in names ])
-    
     cfg_dict = yaml.load( 
         BASE_CONFIG.format( **{ 'level': level, 'dir': dirpath, 'filename': '{0}.{1}'.format(prefix, postfix) } )
     )
+
+    tmp_logger_handlers = []
+    tmp_handlers = {}
+    if enable_stream:
+        tmp_logger_handlers.append('console')
+    else:
+        del(cfg_dict['handlers']['console'])
+    if enable_file:
+        if not os.path.isdir(dirpath):  os.makedirs(dirpath)
+        tmp_logger_handlers.append('file')
+    else:
+        del(cfg_dict['handlers']['file'])
+    loggers_dict = dict([ ( x, {'handlers': tmp_logger_handlers } ) for x in names ])
+    
     cfg_dict.update(loggers_dict)
     return cfg_dict
 
