@@ -1,57 +1,71 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
-from os import path,makedirs
+BASE_CONFIG = """---
+version: 1 
+disable_existing_loggers: False
+loggers:
+  foo.bar.baz:
+    handlers: [console, file]
+handlers:
+  console:
+    class : logging.StreamHandler
+    formatter: mx
+    level: {level}
+    stream: ext://sys.stdout
+  file:
+    class : logging.handlers.TimedRotatingFileHandler
+    formatter: mx
+    level: {level}
+    filename: {dir}/{filename}
+    when: 'H'
+    interval: 24
+    backupCount: 365
+formatters:
+  mx:
+    format: '%(asctime)s %(process)d %(thread)x %(levelname).4s;%(module)s(%(lineno)d/%(funcName)s) %(message)s'
+    datefmt: '%Y%m%d %H%M%S'
+"""
 
-from logging import Formatter
-from datetime import datetime as dt
+from logging import INFO
+
+def gencfg(
+        names,
+        prefix,
+        enable_stream=True,
+        enable_file=True,
+        postfix='log',
+        level=INFO,
+        logdir='./log',
+           ):
+    global yaml
+    import yaml
+    global os
+    import os
+
+    dirpath=os.path.abspath(logdir)
+    if enable_file and not os.path.isdir(dirpath):  os.makedirs(dirpath)
+
+    tmp_handlers = []
+    if enable_stream:  tmp_handlers.append('console')
+    if enable_file:    tmp_handlers.append('file')
+
+    loggers_dict = dict([ ( x, {'handlers': tmp_handlers } ) for x in names ])
+    
+    cfg_dict = yaml.load( 
+        BASE_CONFIG.format( **{ 'level': level, 'dir': dirpath, 'filename': '{0}.{1}'.format(prefix, postfix) } )
+    )
+    cfg_dict.update(loggers_dict)
+    return cfg_dict
 
 def prefix(filepath):
-    return path.splitext(path.basename(filepath))[0]
-
-def get_stream_handler(level=10):
-    from logging import StreamHandler,Formatter
-
-    handler = StreamHandler()
-    handler.setLevel(level)
-    handler.setFormatter(Formatter("%(asctime)s %(process)d %(thread)x %(levelname).4s;%(module)s(%(lineno)d/%(funcName)s) %(message)s"))
-
-    return handler
-
-def get_file_handler(filename,level=10):
-    from logging import FileHandler,Formatter
-
-    handler = FileHandler(filename=filename)
-    handler.setLevel(level)
-    handler.setFormatter(Formatter("%(asctime)s %(process)d %(thread)x %(levelname).4s;%(module)s(%(lineno)d/%(funcName)s) %(message)s"))
-
-    return handler
-
-def put_logger(name,handlers=[],level=10):
-    from logging import getLogger
-    logger = getLogger(name)
-    logger.setLevel(level)
-    for handler in handlers:
-      logger.addHandler(handler)
-    return logger
-
-def put_logdir(logprefix, logdir='./log', logpostfixes=[]):
-    from datetime import datetime
-
-    date_str = datetime.today().strftime("%Y%m%d%H%M%S")
-
-    if not path.isdir(logdir):  makedirs(logdir)
-
-    logfilenames = []
-    for logpostfix in logpostfixes:
-      logfilenames.append('{0}/{1}.{2}.{3}'.format(logdir,logprefix,date_str,logpostfix))
-
-    return logfilenames
+    global os
+    import os
+    return os.path.splitext(os.path.basename(filepath))[0]
 
 def convert_ctrl(s):
     return ''.join([chr(x) if x > 31 else '0x{0:0>2x}'.format(x) for x in map(ord,list(s)) ])
 
 
-from logging import INFO
 class HandleManager(object):
     def __init__(self,names, prefix, enable_stream=True, enable_file=True, postfix='log', level=INFO, logdir='./log' ):
         self.file_param = {}

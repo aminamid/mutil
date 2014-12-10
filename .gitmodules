@@ -4,3 +4,6 @@
 [submodule "contrib/docopt"]
 	path = contrib/docopt
 	url = git://github.com/docopt/docopt.git
+[submodule "contrib/pyyaml"]
+	path = contrib/pyyaml
+	url = https://github.com/yaml/pyyaml
