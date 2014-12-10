@@ -7,3 +7,6 @@
 [submodule "contrib/pyyaml"]
 	path = contrib/pyyaml
 	url = https://github.com/yaml/pyyaml
+[submodule "contrib/pp"]
+	path = contrib/pp
+	url = https://github.com/aminamid/pp
